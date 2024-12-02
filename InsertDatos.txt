@@ -1,0 +1,42 @@
+
+INSERT INTO Usuario (Nombre, Contrasena)
+VALUES ('harol', 123);
+
+
+
+
+==========================================================================================
+DECLARE @IdEmpresa INT;
+
+-- Obtener el IdEmpresa de la primera empresa (según el orden de inserción)
+SELECT TOP 1 @IdEmpresa = IdEmpresa FROM Empresa ORDER BY IdEmpresa ASC;
+
+-- Asegurarse de que se obtuvo un IdEmpresa
+IF @IdEmpresa IS NOT NULL
+BEGIN
+    -- Actualizar la empresa con el presupuesto inicial
+    UPDATE Empresa
+    SET PresupuestoInicial = 200000.00
+    WHERE IdEmpresa = @IdEmpresa;
+
+    -- Insertar en CuentaBanco usando el IdEmpresa dinámico
+    INSERT INTO CuentaBanco (TipoCuenta, IdEmpresa, NombreUsuario, Saldo)
+    VALUES ('Cuenta Corriente', @IdEmpresa, 'harol', 200000.00);
+
+    -- Hacer los inserts para proveedores
+    INSERT INTO Proveedor (IdEmpresa, NombreProveedor, TipoEntrega, CantidadEntrega)
+    VALUES 
+        (@IdEmpresa, 'Proveedor Quincenal', 'Quincenal', 1100); 
+
+    INSERT INTO Proveedor (IdEmpresa, NombreProveedor, TipoEntrega, CantidadEntrega)
+    VALUES 
+        (@IdEmpresa, 'Proveedor Semanal', 'Semanal', 500); 
+
+    INSERT INTO Proveedor (IdEmpresa, NombreProveedor, TipoEntrega, CantidadEntrega)
+    VALUES 
+        (@IdEmpresa, 'Proveedor Quincenal', 'Quincenal', 1100); 
+END
+ELSE
+BEGIN
+    PRINT 'No se encontró ninguna empresa.';
+END

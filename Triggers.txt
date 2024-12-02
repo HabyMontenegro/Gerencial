@@ -1,0 +1,70 @@
+CREATE TRIGGER CalcularCostoEntrega
+ON Proveedor
+AFTER INSERT
+AS
+BEGIN
+    DECLARE @idProveedor INT, 
+            @tipoEntrega NVARCHAR(50), 
+            @cantidadEntrega INT, 
+            @idEmpresa INT, 
+            @precioInicial DECIMAL(18,2), 
+            @costoEntrega DECIMAL(18,2);
+    
+    -- Obtener los datos del proveedor insertado
+    SELECT @idProveedor = IdProveedor, 
+           @tipoEntrega = TipoEntrega,
+           @cantidadEntrega = CantidadEntrega,
+           @idEmpresa = IdEmpresa
+    FROM INSERTED;
+    
+    -- Obtener el precio inicial del producto más relevante
+    SELECT TOP 1 @precioInicial = PrecioInicial
+    FROM Producto
+    WHERE IdEmpresa = @idEmpresa
+    ORDER BY IdProducto; -- Ajusta esto según la lógica de tu aplicación
+
+    -- Calcular el costo de entrega según el tipo de entrega
+    IF @tipoEntrega = 'Diaria'
+    BEGIN
+        SET @costoEntrega = (@cantidadEntrega * @precioInicial) * 0.90;
+    END
+    ELSE IF @tipoEntrega = 'Semanal'
+    BEGIN
+        SET @costoEntrega = (@cantidadEntrega * @precioInicial) * 0.70;
+    END
+    ELSE IF @tipoEntrega = 'Quincenal'
+    BEGIN
+        SET @costoEntrega = (@cantidadEntrega * @precioInicial) * 0.50;
+    END
+
+    -- Actualizar el costo de entrega en la tabla Proveedor
+    UPDATE Proveedor
+    SET CostoEntrega = @costoEntrega
+    WHERE IdProveedor = @idProveedor;
+END;
+
+
+
+
+CREATE TRIGGER ActualizarCostoEntrega
+ON Producto
+AFTER UPDATE
+AS
+BEGIN
+    -- Declaración de variables para obtener los datos actualizados
+    DECLARE @idEmpresa INT, @precioInicial DECIMAL(18,2);
+
+    -- Obtener los valores de la tabla `INSERTED` (los datos actualizados)
+    SELECT @idEmpresa = IdEmpresa, @precioInicial = PrecioInicial
+    FROM INSERTED;
+
+    -- Actualizar los costos de entrega en la tabla `Proveedor` según el nuevo precio inicial
+    UPDATE Proveedor
+    SET CostoEntrega = 
+        CASE 
+            WHEN TipoEntrega = 'Diaria' THEN (CantidadEntrega * @precioInicial) * 0.90
+            WHEN TipoEntrega = 'Semanal' THEN (CantidadEntrega * @precioInicial) * 0.70
+            WHEN TipoEntrega = 'Quincenal' THEN (CantidadEntrega * @precioInicial) * 0.50
+        END
+    WHERE IdEmpresa = @idEmpresa;
+END;

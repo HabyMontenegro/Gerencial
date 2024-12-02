@@ -1,0 +1,207 @@
+USE gerencial
+GO
+
+-- Tabla Usuario
+CREATE TABLE Usuario (
+    IdUsuario INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100),
+    Contrasena NVARCHAR(255)
+);
+
+-- Tabla Empresa
+CREATE TABLE Empresa (
+    IdEmpresa INT PRIMARY KEY IDENTITY(1,1),
+    NombreEmpresa NVARCHAR(100),
+    PresupuestoInicial DECIMAL(18,2),  -- O presupuesto actual
+    IdUsuario INT,
+    FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario)
+);
+
+-- Tabla Producto
+CREATE TABLE Producto (
+    IdProducto INT PRIMARY KEY IDENTITY(1,1),
+    NombreProducto NVARCHAR(100),
+    CantidadProducto INT,
+    FechaCantidad INT,  -- Hora en formato de número entero (por ejemplo, 2300 para las 11:00 PM)
+    PrecioInicial DECIMAL(18,2),
+    IdEmpresa INT,
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
+
+-- Tabla Acciones
+CREATE TABLE Acciones (
+    IdAcciones INT PRIMARY KEY IDENTITY(1,1),
+    NombreAcciones NVARCHAR(100),
+    CantidadInicial INT,
+    IdEmpresa INT,
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
+
+-- Tabla Empleo
+CREATE TABLE Empleo (
+    IdEmpleo INT PRIMARY KEY IDENTITY(1,1),
+    NombreEmpleo NVARCHAR(100),
+    Salario DECIMAL(18,2),
+    IdEmpresa INT,
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
+
+-- Tabla KpiVentaDiaria
+CREATE TABLE KpiVentaDiaria (
+    IdVenta INT PRIMARY KEY IDENTITY(1,1),
+    IdEmpresa INT,
+    Dia INT,  -- Día como un número entero (por ejemplo, 1 para lunes, 2 para martes, etc.)
+    Hora INT,  -- Hora como un número entero (por ejemplo, 1300 para 1:00 PM)
+    IdProducto INT,
+    CantidadVendida INT,
+    ValorTotalVenta DECIMAL(18,2),
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa),
+    FOREIGN KEY (IdProducto) REFERENCES Producto(IdProducto)
+);
+
+-- Tabla KpiIndiceConversion
+CREATE TABLE KpiIndiceConversion (
+    IdConversion INT PRIMARY KEY IDENTITY(1,1),
+    IdEmpresa INT,
+    Dia INT,  -- Día como un número entero
+    Hora INT,  -- Hora como un número entero
+    CantidadVisitantes INT,
+    CantidadCompradores INT,
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
+
+-- Tabla KpiSatisfaccion
+CREATE TABLE KpiSatisfaccion (
+    IdSatisfaccion INT PRIMARY KEY IDENTITY(1,1),
+    IdEmpresa INT,
+    PuntuacionSatisfaccion INT,
+    Dia INT,  -- Día como un número entero
+    Hora INT,  -- Hora como un número entero
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
+
+-- Tabla ContadorTiempoSimulacion
+CREATE TABLE ContadorTiempoSimulacion (
+    IdContador INT PRIMARY KEY IDENTITY(1,1),
+    IdUsuario INT,
+    IdEmpresa INT,
+    TiempoContador INT,  -- En minutos o segundos, dependiendo de tu preferencia
+    FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario),
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
+
+-- Tabla Configuracion
+CREATE TABLE Configuracion (
+    IdConfiguracion INT PRIMARY KEY IDENTITY(1,1),
+    IdEmpresa INT,
+    tipoProveedor NVARCHAR(50);
+    ProveerAuto BIT,  -- 0 o 1 para activar/desactivar
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
+
+-- Tabla Proveedor
+CREATE TABLE Proveedor (
+    IdProveedor INT PRIMARY KEY IDENTITY(1,1),
+    IdEmpresa INT,
+    NombreProveedor NVARCHAR(100),
+    TipoEntrega NVARCHAR(50),  -- Diaria, Semanal, Mensual
+    CantidadEntrega INT,
+    CostoEntrega DECIMAL(20,2),
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
+
+-- Tabla Banco
+CREATE TABLE Banco (
+    IdBanco INT PRIMARY KEY IDENTITY(1,1),
+    NombreBanco NVARCHAR(100),
+    PrestamoBanco DECIMAL(18,2)
+);
+
+-- Tabla CuentaBanco
+CREATE TABLE CuentaBanco (
+    IdCuenta INT PRIMARY KEY IDENTITY(1,1),
+    TipoCuenta NVARCHAR(50),
+    IdEmpresa INT,
+    NombreUsuario NVARCHAR(100),
+    Saldo DECIMAL(18,2),
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
+
+
+-- Tabla Factura
+CREATE TABLE Factura (
+    IdFactura INT PRIMARY KEY IDENTITY(1,1),
+    IdEmpresa INT,
+    IdCobrador INT,
+    IdProveedor INT NULL,
+    IdBanco INT NULL;
+    Valor DECIMAL(18,2),
+    Estado NVARCHAR(50),  -- Pagada o No Pagada
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa),
+    FOREIGN KEY (IdProveedor) REFERENCES Proveedor(IdProveedor),
+    FOREIGN KEY (IdBanco) REFERENCES Banco(IdBanco)
+);
+
+-- Tabla Movimiento
+CREATE TABLE Movimiento (
+    IdMovimiento INT PRIMARY KEY IDENTITY(1,1),
+    IdEmpresa INT,
+    Fecha INT,  -- Fecha como un número entero (por ejemplo, 20231109 para 9 de noviembre de 2024)
+    Tipo NVARCHAR(50),  -- Ingreso, Gasto
+    Valor DECIMAL(18,2),
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
+
+-- Tabla Empleado
+CREATE TABLE Empleado (
+    IdEmpleado INT PRIMARY KEY IDENTITY(1,1),
+    IdEmpleo INT,
+    NombreEmpleado NVARCHAR(100),
+    CantidadBuff INT NULL,
+    TipoBuff NVARCHAR(100) NULL;
+    SalarioGanado DECIMAL(18, 2) NULL;
+    FOREIGN KEY (IdEmpleo) REFERENCES Empleo(IdEmpleo)
+);
+
+-- Tabla AplicanteEmpleo
+CREATE TABLE AplicanteEmpleo (
+    IdAplicante INT PRIMARY KEY IDENTITY(1,1),
+    NombreAplicante NVARCHAR(100),
+    IdEmpleoAplicado INT,
+    CantidadBuff INT NULL,
+    TipoBuff NVARCHAR(100) NULL;
+    ValorSalario DECIMAL(18, 2) NULL;
+    FOREIGN KEY (IdEmpleoAplicado) REFERENCES Empleo(IdEmpleo)
+);
+
+-- Tabla Prestamo
+CREATE TABLE Prestamo (
+    IdPrestamo INT PRIMARY KEY IDENTITY(1,1),
+    IdEmpresa INT,
+    IdBanco INT,
+    ValorPagado DECIMAL(18,2),
+    DeudaTotal DECIMAL(18,2),
+    ValorCuota DECIMAL(18,2),
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa),
+    FOREIGN KEY (IdBanco) REFERENCES Banco(IdBanco)
+);
+
+-- Tabla ClienteEmpresa
+CREATE TABLE ClienteEmpresa (
+    IdCliente INT PRIMARY KEY IDENTITY(1,1),
+    Nombre NVARCHAR(100) NOT NULL,
+    Telefono NVARCHAR(15),  -- Ajusta el tamaño según el formato del número de teléfono
+    Email NVARCHAR(255),    -- Para almacenar direcciones de correo
+    IdEmpresa INT NOT NULL, -- Relación con la tabla Empresa
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
+
+
+CREATE TABLE NominaEmpresa (
+    IdNomina INT PRIMARY KEY IDENTITY(1,1),  -- Identificador único para cada nómina
+    IdEmpresa INT NOT NULL,                  -- Relación con la empresa
+    FechaPago INT NOT NULL,                  -- Fecha en formato entero (AAAAMMDD)
+    ValorTotal DECIMAL(18,2) NOT NULL,       -- Monto total de la nómina
+    Estado NVARCHAR(50) NOT NULL,            -- Estado de la nómina ('Pagada' o 'En Deuda')
+    FOREIGN KEY (IdEmpresa) REFERENCES Empresa(IdEmpresa)
+);
